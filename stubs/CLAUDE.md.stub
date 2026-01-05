@@ -1,3 +1,34 @@
+## Generator Commands
+
+Use these commands instead of writing boilerplate manually:
+
+```bash
+# Create an Action class (business logic)
+php artisan make:action User/UpdateProfile
+php artisan make:action Order/ApproveOrder
+
+# Create a DTO (data transfer object)
+php artisan make:dto UserProfile --properties=id:int,name:string,email:string
+php artisan make:dto OrderData --properties=id:int,total:int,status:string --model=Order
+
+# Generate TypeScript interfaces from DTOs
+php artisan types:generate
+```
+
+### When to use these commands
+
+- **make:action**: Always use for business logic. Creates properly structured Action in `app/Actions/{Domain}/`
+- **make:dto**: Use when passing data to Inertia pages. Creates readonly DTO with optional `fromModel()` method
+- **types:generate**: Run after creating/modifying DTOs. Generates `resources/js/types/generated.d.ts`
+
+### TypeScript Integration
+
+After running `types:generate`, import types in your React components:
+
+```tsx
+import type { UserData, OrderData } from '@/types/generated';
+```
+
 ## Running Tests
 
 Use this command to run tests (avoids environment variable conflicts):
