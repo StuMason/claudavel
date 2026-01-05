@@ -43,7 +43,7 @@ class InstallCommand extends Command
         $this->publishStubs();
         $this->updateComposerJson();
         $this->updateBootstrapProviders();
-        $this->updateEnvFile();
+        $this->updateEnvFile(); // Must run LAST to avoid composer hooks hitting non-existent DB
         $this->runMigrations();
 
         $this->newLine();
@@ -192,13 +192,8 @@ class InstallCommand extends Command
             message: 'Setting up API routes...'
         );
 
-        // Install broadcasting (creates routes/channels.php)
-        if ($this->installReverb) {
-            spin(
-                callback: fn () => Process::run('php artisan install:broadcasting --without-reverb --without-node --no-interaction')->throw(),
-                message: 'Setting up broadcasting...'
-            );
-        }
+        // Note: We skip install:broadcasting as it causes issues with TTY and interactive prompts
+        // Reverb assets are already published via vendor:publish in installPackages()
     }
 
     private function publishStubs(): void
