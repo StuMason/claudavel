@@ -22,7 +22,7 @@ Claudavel is an opinionated Laravel starter that configures everything you need 
 ## Quick Start
 
 ```bash
-composer require stumason/claudavel --dev
+composer require stumason/claudavel
 php artisan claudavel:install --all
 createdb your_project_name
 composer run dev
