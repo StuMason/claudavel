@@ -1,0 +1,117 @@
+name: Security Check
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 3am UTC daily
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check for security vulnerabilities
+        id: security
+        run: |
+          composer audit --format=json > audit.json 2>&1 || true
+          if [ -s audit.json ] && [ "$(cat audit.json | jq '.advisories | length')" -gt 0 ]; then
+            echo "vulnerable=true" >> $GITHUB_OUTPUT
+            echo "::warning::Security vulnerabilities found"
+            cat audit.json | jq '.advisories'
+          else
+            echo "vulnerable=false" >> $GITHUB_OUTPUT
+            echo "No security vulnerabilities found"
+          fi
+
+  update-dependencies:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check for outdated dependencies
+        id: outdated
+        run: |
+          composer outdated --direct --format=json > outdated.json 2>&1 || true
+          if [ -s outdated.json ]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update minor versions
+        if: steps.outdated.outputs.has_updates == 'true'
+        run: |
+          composer update --prefer-dist --no-interaction --no-progress --with-all-dependencies
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet composer.lock; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests
+        if: steps.changes.outputs.changed == 'true'
+        run: vendor/bin/pest
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies'
+          title: 'chore(deps): update dependencies'
+          body: |
+            Automated dependency updates.
+
+            This PR updates dependencies to their latest compatible versions.
+
+            **Changes:**
+            ```
+            $(composer outdated --direct 2>/dev/null || echo "See composer.lock diff")
+            ```
+
+            ---
+            *This PR was automatically created by the security workflow.*
+          branch: deps/update-dependencies
+          delete-branch: true
+          labels: dependencies,automerge
+
+      - name: Enable auto-merge
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          PR_NUMBER=$(gh pr list --head deps/update-dependencies --json number -q '.[0].number')
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr merge $PR_NUMBER --auto --squash
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
