@@ -19,6 +19,7 @@ class InstallCommand extends Command
                             {--reverb : Install Laravel Reverb}
                             {--telescope : Install Laravel Telescope}
                             {--all : Install all optional packages}
+                            {--no-workflows : Skip GitHub workflows installation}
                             {--force : Overwrite existing files}';
 
     protected $description = 'Install Claudavel: opinionated Laravel setup with Fortify, Horizon, Reverb, Telescope, UIDs, and coding standards';
@@ -313,6 +314,11 @@ class InstallCommand extends Command
 
         // Add routes
         $this->addHealthCheckRoute();
+
+        // GitHub workflows
+        if (! $this->option('no-workflows')) {
+            $this->publishWorkflows($stubsPath, $force);
+        }
     }
 
     private function publishFile(string $source, string $destination, string $name, bool $force): void
@@ -585,5 +591,39 @@ PHP;
             message: 'Running migrations...'
         );
         info('Migrations complete');
+    }
+
+    private function publishWorkflows(string $stubsPath, bool $force): void
+    {
+        $workflowsPath = base_path('.github/workflows');
+        File::ensureDirectoryExists($workflowsPath);
+
+        $workflows = [
+            'tests.yml',
+            'lint.yml',
+            'claude-code-review.yml',
+            'claude.yml',
+            'dependabot-automerge.yml',
+        ];
+
+        foreach ($workflows as $workflow) {
+            $this->publishFile(
+                "{$stubsPath}/.github/workflows/{$workflow}.stub",
+                "{$workflowsPath}/{$workflow}",
+                ".github/workflows/{$workflow}",
+                $force
+            );
+        }
+
+        // Dependabot config goes in .github root
+        $this->publishFile(
+            "{$stubsPath}/.github/dependabot.yml.stub",
+            base_path('.github/dependabot.yml'),
+            '.github/dependabot.yml',
+            $force
+        );
+
+        $this->newLine();
+        $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration');
     }
 }

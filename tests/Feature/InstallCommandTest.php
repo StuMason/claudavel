@@ -201,3 +201,106 @@ test('service provider registers command', function () {
 
     expect($commands)->toHaveKey('claudavel:install');
 });
+
+test('all workflow stubs exist', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+
+    $requiredWorkflows = [
+        '.github/workflows/tests.yml.stub',
+        '.github/workflows/lint.yml.stub',
+        '.github/workflows/claude-code-review.yml.stub',
+        '.github/workflows/claude.yml.stub',
+        '.github/workflows/dependabot-automerge.yml.stub',
+        '.github/dependabot.yml.stub',
+    ];
+
+    foreach ($requiredWorkflows as $workflow) {
+        expect(File::exists("{$stubsPath}/{$workflow}"))->toBeTrue("Missing workflow stub: {$workflow}");
+    }
+});
+
+test('workflow stubs are valid yaml', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+
+    $workflows = [
+        'tests.yml.stub',
+        'lint.yml.stub',
+        'claude-code-review.yml.stub',
+        'claude.yml.stub',
+        'dependabot-automerge.yml.stub',
+    ];
+
+    foreach ($workflows as $workflow) {
+        $content = File::get("{$stubsPath}/{$workflow}");
+        // Basic YAML validation - check for name key and on trigger
+        expect($content)->toContain('name:');
+        expect($content)->toContain('on:');
+        expect($content)->toContain('jobs:');
+    }
+});
+
+test('dependabot config is valid yaml', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github';
+    $content = File::get("{$stubsPath}/dependabot.yml.stub");
+
+    expect($content)->toContain('version: 2');
+    expect($content)->toContain('updates:');
+    expect($content)->toContain('package-ecosystem: composer');
+    expect($content)->toContain('package-ecosystem: npm');
+    expect($content)->toContain('package-ecosystem: github-actions');
+});
+
+test('tests workflow has postgres setup', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+    $content = File::get("{$stubsPath}/tests.yml.stub");
+
+    expect($content)->toContain('Setup PostgreSQL');
+    expect($content)->toContain('pdo_pgsql');
+    expect($content)->toContain('vendor/bin/pest');
+});
+
+test('lint workflow checks pint and eslint', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+    $content = File::get("{$stubsPath}/lint.yml.stub");
+
+    expect($content)->toContain('vendor/bin/pint');
+    expect($content)->toContain('npm run lint');
+    expect($content)->toContain('npm run format:check');
+});
+
+test('claude workflows skip dependabot', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+
+    $claudeReview = File::get("{$stubsPath}/claude-code-review.yml.stub");
+    expect($claudeReview)->toContain("github.actor != 'dependabot[bot]'");
+
+    $claude = File::get("{$stubsPath}/claude.yml.stub");
+    expect($claude)->toContain("github.actor != 'dependabot[bot]'");
+});
+
+test('claude workflows use oauth token', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+
+    $claudeReview = File::get("{$stubsPath}/claude-code-review.yml.stub");
+    expect($claudeReview)->toContain('CLAUDE_CODE_OAUTH_TOKEN');
+
+    $claude = File::get("{$stubsPath}/claude.yml.stub");
+    expect($claude)->toContain('CLAUDE_CODE_OAUTH_TOKEN');
+});
+
+test('dependabot automerge workflow handles minor and patch', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+    $content = File::get("{$stubsPath}/dependabot-automerge.yml.stub");
+
+    expect($content)->toContain('dependabot/fetch-metadata');
+    expect($content)->toContain('semver-minor');
+    expect($content)->toContain('semver-patch');
+    expect($content)->toContain('gh pr merge --auto --squash');
+});
+
+test('command has no-workflows option', function () {
+    $command = $this->app->make(\Stumason\Claudavel\Commands\InstallCommand::class);
+    $definition = $command->getDefinition();
+
+    expect($definition->hasOption('no-workflows'))->toBeTrue();
+});
