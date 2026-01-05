@@ -1,0 +1,19 @@
+## Running Tests
+
+Use this command to run tests (avoids environment variable conflicts):
+
+```bash
+env -u APP_ENV -u DB_CONNECTION -u DB_DATABASE -u DB_HOST -u DB_PORT -u DB_USERNAME -u DB_PASSWORD -u SESSION_DRIVER -u CACHE_STORE -u QUEUE_CONNECTION php artisan test
+```
+
+## Coding Standards
+
+Before writing any code, review the coding standards in `docs/standards/`:
+
+- [README.md](docs/standards/README.md) - Quick reference and checklist
+- [general.md](docs/standards/general.md) - Core principles, type hints, imports
+- [backend.md](docs/standards/backend.md) - Laravel patterns: models, migrations, controllers, Actions, DTOs
+- [frontend.md](docs/standards/frontend.md) - Inertia + React + Tailwind patterns
+- [testing.md](docs/standards/testing.md) - Pest v4 testing patterns
+
+These standards take precedence over generic Laravel conventions.

@@ -1,0 +1,9 @@
+/vendor/
+/node_modules/
+.phpunit.result.cache
+.phpunit.cache
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
