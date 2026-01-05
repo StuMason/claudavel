@@ -127,3 +127,77 @@ test('coding standards are concise', function () {
     $testingLines = count(explode("\n", File::get("{$stubsPath}/testing.md")));
     expect($testingLines)->toBeLessThan(100);
 });
+
+test('sanitizeName converts project names correctly', function () {
+    $command = new \Stumason\Claudavel\Commands\InstallCommand;
+
+    expect($command->sanitizeName('My Project'))->toBe('my_project');
+    expect($command->sanitizeName('my-cool-app'))->toBe('my_cool_app');
+    expect($command->sanitizeName('CamelCaseApp'))->toBe('camelcaseapp');
+    expect($command->sanitizeName('app_with_underscores'))->toBe('app_with_underscores');
+    expect($command->sanitizeName('App With Spaces & Symbols!'))->toBe('app_with_spaces___symbols_');
+    expect($command->sanitizeName('123-numeric-start'))->toBe('123_numeric_start');
+});
+
+test('command has all expected options', function () {
+    $command = $this->app->make(\Stumason\Claudavel\Commands\InstallCommand::class);
+    $definition = $command->getDefinition();
+
+    expect($definition->hasOption('horizon'))->toBeTrue();
+    expect($definition->hasOption('reverb'))->toBeTrue();
+    expect($definition->hasOption('telescope'))->toBeTrue();
+    expect($definition->hasOption('all'))->toBeTrue();
+    expect($definition->hasOption('force'))->toBeTrue();
+    expect($definition->hasArgument('name'))->toBeTrue();
+});
+
+test('stubs contain valid php syntax', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+
+    $phpStubs = [
+        'HealthCheckController.php.stub',
+        'HorizonServiceProvider.php.stub',
+        'TelescopeServiceProvider.php.stub',
+        'app/Models/Traits/HasUid.php.stub',
+        'app/Services/SqidService.php.stub',
+        'config/sqids.php.stub',
+    ];
+
+    foreach ($phpStubs as $stub) {
+        $content = File::get("{$stubsPath}/{$stub}");
+        // Check for PHP opening tag and namespace/return
+        expect($content)->toStartWith('<?php');
+        // Check for no obvious syntax errors (balanced braces)
+        $opens = substr_count($content, '{');
+        $closes = substr_count($content, '}');
+        expect($opens)->toBe($closes, "Unbalanced braces in {$stub}");
+    }
+});
+
+test('CLAUDE.md stub contains required sections', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+    $content = File::get("{$stubsPath}/CLAUDE.md.stub");
+
+    expect($content)->toContain('Running Tests');
+    expect($content)->toContain('php artisan test');
+    expect($content)->toContain('docs/standards');
+});
+
+test('config stubs are properly formatted', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+
+    // Prettierrc should be valid JSON
+    $prettierContent = File::get("{$stubsPath}/prettierrc.stub");
+    $prettierJson = json_decode($prettierContent, true);
+    expect($prettierJson)->not->toBeNull('prettierrc.stub is not valid JSON');
+
+    // Editorconfig should have root directive
+    $editorconfigContent = File::get("{$stubsPath}/editorconfig.stub");
+    expect($editorconfigContent)->toContain('root = true');
+});
+
+test('service provider registers command', function () {
+    $commands = \Illuminate\Support\Facades\Artisan::all();
+
+    expect($commands)->toHaveKey('claudavel:install');
+});

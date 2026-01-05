@@ -75,7 +75,7 @@ class InstallCommand extends Command
         $this->projectName = $this->sanitizeName(basename(base_path()));
     }
 
-    private function sanitizeName(string $name): string
+    public function sanitizeName(string $name): string
     {
         return strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $name));
     }
