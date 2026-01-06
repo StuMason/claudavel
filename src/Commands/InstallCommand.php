@@ -50,11 +50,14 @@ class InstallCommand extends Command
         info('Claudavel installed successfully!');
         $this->newLine();
 
+        // Build the base URL using project name (assumes Herd/Valet .test domain)
+        $baseUrl = "http://{$this->projectName}.test";
+
         $this->components->bulletList(array_filter([
             'Run <comment>composer run dev</comment> to start the development server',
-            'Visit <comment>/health</comment> to check system status',
-            $this->installHorizon ? 'Visit <comment>/horizon</comment> to monitor queues' : null,
-            $this->installTelescope ? 'Visit <comment>/telescope</comment> for debugging' : null,
+            "Visit <comment>{$baseUrl}/health</comment> to check system status",
+            $this->installHorizon ? "Visit <comment>{$baseUrl}/horizon</comment> to monitor queues" : null,
+            $this->installTelescope ? "Visit <comment>{$baseUrl}/telescope</comment> for debugging" : null,
         ]));
 
         $this->newLine();
@@ -271,6 +274,13 @@ class InstallCommand extends Command
             $force
         );
 
+        $this->publishFile(
+            "{$stubsPath}/config/claudavel.php.stub",
+            config_path('claudavel.php'),
+            'config/claudavel.php',
+            $force
+        );
+
         // Create Actions and DTOs directories
         File::ensureDirectoryExists(app_path('Actions'));
         File::ensureDirectoryExists(app_path('DataTransferObjects'));
@@ -455,6 +465,13 @@ class InstallCommand extends Command
             $content .= "REVERB_PORT=8080\n";
             $content .= "REVERB_SCHEME=http\n";
             $updates[] = 'REVERB_*';
+        }
+
+        // Admin emails for Horizon/Telescope access in production
+        if (! str_contains($content, 'ADMIN_EMAILS')) {
+            $content .= "\n# Admin emails for Horizon/Telescope access (comma-separated)\n";
+            $content .= "ADMIN_EMAILS=\n";
+            $updates[] = 'ADMIN_EMAILS';
         }
 
         if (! empty($updates)) {
