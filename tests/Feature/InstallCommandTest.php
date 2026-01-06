@@ -53,6 +53,7 @@ test('all required stubs exist', function () {
         'app/Models/Traits/HasUid.php.stub',
         'app/Services/SqidService.php.stub',
         'config/sqids.php.stub',
+        'config/claudavel.php.stub',
         'app/Actions/.gitkeep.stub',
         'app/DataTransferObjects/.gitkeep.stub',
     ];
@@ -76,11 +77,11 @@ test('service provider stubs have secure gates', function () {
 
     $horizonContent = File::get("{$stubsPath}/HorizonServiceProvider.php.stub");
     expect($horizonContent)->toContain("app()->environment('local')");
-    expect($horizonContent)->toContain('TODO: Add your admin emails here');
+    expect($horizonContent)->toContain("config('claudavel.admin_emails'");
 
     $telescopeContent = File::get("{$stubsPath}/TelescopeServiceProvider.php.stub");
     expect($telescopeContent)->toContain("app()->environment('local')");
-    expect($telescopeContent)->toContain('TODO: Add your admin emails here');
+    expect($telescopeContent)->toContain("config('claudavel.admin_emails'");
 });
 
 test('HasUid stub is valid php', function () {
@@ -112,6 +113,14 @@ test('sqids config stub is valid php', function () {
     expect($content)->toContain("'alphabet'");
     expect($content)->toContain("'length'");
     expect($content)->toContain('env(');
+});
+
+test('claudavel config stub is valid php', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+    $content = File::get("{$stubsPath}/config/claudavel.php.stub");
+
+    expect($content)->toContain("'admin_emails'");
+    expect($content)->toContain('ADMIN_EMAILS');
 });
 
 test('coding standards are concise', function () {

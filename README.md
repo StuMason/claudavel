@@ -80,7 +80,21 @@ DB_CONNECTION=pgsql
 SESSION_DRIVER=redis
 CACHE_STORE=redis
 QUEUE_CONNECTION=redis
+ADMIN_EMAILS=you@example.com,team@example.com
 ```
+
+### Configuration
+
+Claudavel publishes `config/claudavel.php` for package settings:
+
+```php
+// config/claudavel.php
+return [
+    'admin_emails' => env('ADMIN_EMAILS'),  // Comma-separated list
+];
+```
+
+Admin emails control access to Horizon and Telescope in production. In local environment, everyone has access.
 
 ## Features
 

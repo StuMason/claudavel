@@ -274,6 +274,13 @@ class InstallCommand extends Command
             $force
         );
 
+        $this->publishFile(
+            "{$stubsPath}/config/claudavel.php.stub",
+            config_path('claudavel.php'),
+            'config/claudavel.php',
+            $force
+        );
+
         // Create Actions and DTOs directories
         File::ensureDirectoryExists(app_path('Actions'));
         File::ensureDirectoryExists(app_path('DataTransferObjects'));
@@ -458,6 +465,13 @@ class InstallCommand extends Command
             $content .= "REVERB_PORT=8080\n";
             $content .= "REVERB_SCHEME=http\n";
             $updates[] = 'REVERB_*';
+        }
+
+        // Admin emails for Horizon/Telescope access in production
+        if (! str_contains($content, 'ADMIN_EMAILS')) {
+            $content .= "\n# Admin emails for Horizon/Telescope access (comma-separated)\n";
+            $content .= "ADMIN_EMAILS=\n";
+            $updates[] = 'ADMIN_EMAILS';
         }
 
         if (! empty($updates)) {
