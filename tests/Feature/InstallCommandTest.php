@@ -157,7 +157,7 @@ test('command has all expected options', function () {
     expect($definition->hasOption('horizon'))->toBeTrue();
     expect($definition->hasOption('reverb'))->toBeTrue();
     expect($definition->hasOption('telescope'))->toBeTrue();
-    expect($definition->hasOption('all'))->toBeTrue();
+    expect($definition->hasOption('no-workflows'))->toBeTrue();
     expect($definition->hasOption('force'))->toBeTrue();
     expect($definition->hasArgument('name'))->toBeTrue();
 });
