@@ -12,7 +12,7 @@ One command installs a complete Laravel stack with AI-powered code review, consi
 
 ```bash
 composer require stumason/claudavel
-php artisan claudavel:install --all
+php artisan claudavel:install
 ```
 
 ## Why This Exists
@@ -30,7 +30,7 @@ Claude Code is powerful, but it works better when your project has clear convent
 laravel new my-app
 cd my-app
 composer require stumason/claudavel
-php artisan claudavel:install --all
+php artisan claudavel:install
 createdb my_app
 composer run dev
 ```
@@ -45,9 +45,9 @@ Add `CLAUDE_CODE_OAUTH_TOKEN` to your GitHub repo secrets to enable AI features.
 | ------------------- | ----------------------------------------------- |
 | laravel/fortify     | Authentication without Breeze/Jetstream bloat   |
 | laravel/sanctum     | API tokens                                      |
-| laravel/horizon     | Redis queue dashboard (optional)                |
-| laravel/reverb      | WebSockets without third-party services (optional) |
-| laravel/telescope   | Debug assistant (optional)                      |
+| laravel/horizon     | Redis queue dashboard                           |
+| laravel/reverb      | WebSockets without third-party services         |
+| laravel/telescope   | Debug assistant                                 |
 | laravel/pail        | Real-time log tailing                           |
 | laravel/wayfinder   | Type-safe routes in TypeScript                  |
 | sqids/sqids         | ID obfuscation                                  |
@@ -130,14 +130,24 @@ The `/health` endpoint verifies database, Redis, cache, queue, and storage. Use 
 ## Installation Options
 
 ```bash
-php artisan claudavel:install                      # Interactive prompts
-php artisan claudavel:install --all                # Install everything
-php artisan claudavel:install --horizon --reverb   # Pick specific packages
+php artisan claudavel:install                      # Install everything (default)
+php artisan claudavel:install --horizon            # Only Horizon (skip Reverb, Telescope)
 php artisan claudavel:install --no-workflows       # Skip GitHub workflows
 php artisan claudavel:install --force              # Overwrite existing files
 ```
 
 The command is idempotent - run it on existing projects and it only installs what's missing.
+
+## Development Server
+
+`composer run dev` runs everything concurrently:
+
+- Laravel dev server
+- Horizon (queue worker)
+- Reverb (WebSockets)
+- Scheduler (`schedule:work`)
+- Pail (log tailing)
+- Vite (frontend)
 
 ## Requirements
 

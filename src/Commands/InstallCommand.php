@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
-use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\spin;
 use function Laravel\Prompts\warning;
@@ -15,10 +14,9 @@ class InstallCommand extends Command
 {
     protected $signature = 'claudavel:install
                             {name? : Project name for database naming}
-                            {--horizon : Install Laravel Horizon}
-                            {--reverb : Install Laravel Reverb}
-                            {--telescope : Install Laravel Telescope}
-                            {--all : Install all optional packages}
+                            {--horizon : Install only Horizon (skip Reverb, Telescope)}
+                            {--reverb : Install only Reverb (skip Horizon, Telescope)}
+                            {--telescope : Install only Telescope (skip Horizon, Reverb)}
                             {--no-workflows : Skip GitHub workflows installation}
                             {--force : Overwrite existing files}';
 
@@ -86,14 +84,7 @@ class InstallCommand extends Command
 
     private function determinePackagesToInstall(): void
     {
-        if ($this->option('all')) {
-            $this->installHorizon = true;
-            $this->installReverb = true;
-            $this->installTelescope = true;
-
-            return;
-        }
-
+        // If specific packages are requested, only install those
         if ($this->option('horizon') || $this->option('reverb') || $this->option('telescope')) {
             $this->installHorizon = $this->option('horizon');
             $this->installReverb = $this->option('reverb');
@@ -102,28 +93,10 @@ class InstallCommand extends Command
             return;
         }
 
-        if ($this->option('no-interaction')) {
-            $this->installHorizon = true;
-            $this->installReverb = true;
-            $this->installTelescope = true;
-
-            return;
-        }
-
-        $this->installHorizon = confirm(
-            label: 'Install Laravel Horizon? (Redis-based queue management)',
-            default: true
-        );
-
-        $this->installReverb = confirm(
-            label: 'Install Laravel Reverb? (WebSocket server)',
-            default: true
-        );
-
-        $this->installTelescope = confirm(
-            label: 'Install Laravel Telescope? (Debugging & monitoring)',
-            default: true
-        );
+        // Default: install everything (--all is the default behavior)
+        $this->installHorizon = true;
+        $this->installReverb = true;
+        $this->installTelescope = true;
     }
 
     private function installPackages(): void
@@ -580,10 +553,11 @@ PHP;
             $devCommands[] = 'php artisan reverb:start';
         }
 
+        $devCommands[] = 'php artisan schedule:work';
         $devCommands[] = 'php artisan pail --timeout=0';
         $devCommands[] = 'npm run dev';
 
-        $colors = ['#93c5fd', '#c4b5fd', '#fb7185', '#fdba74', '#4ade80'];
+        $colors = ['#93c5fd', '#c4b5fd', '#fb7185', '#fdba74', '#4ade80', '#fbbf24'];
         $names = ['server'];
 
         if ($this->installHorizon) {
@@ -592,6 +566,7 @@ PHP;
         if ($this->installReverb) {
             $names[] = 'reverb';
         }
+        $names[] = 'scheduler';
         $names[] = 'logs';
         $names[] = 'vite';
 
