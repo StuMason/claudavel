@@ -6,115 +6,87 @@
 [![Laravel Version](https://img.shields.io/badge/laravel-12.x-red.svg)](https://laravel.com)
 [![License](https://img.shields.io/packagist/l/stumason/claudavel.svg)](LICENSE)
 
-**Zero to production-ready Laravel in one command.**
+**Laravel + Claude Code, configured to work together.**
 
-Claudavel is an opinionated Laravel starter that configures everything you need for a modern, AI-assisted development workflow. Stop wasting the first hour of every project on boilerplate.
-
-## Why Claudavel?
-
-- **One command** installs Fortify, Sanctum, Horizon, Reverb, Telescope, Pail, and Wayfinder
-- **Postgres + Redis** configured out of the box (because SQLite doesn't scale)
-- **ID obfuscation** via Sqids - never expose sequential IDs to users
-- **Actions pattern** scaffolded - keep controllers thin, business logic testable
-- **AI-ready** - coding standards that Claude/GPT actually follow
-- **`composer run dev`** starts everything: server, queue, websockets, logs, vite
-
-## Quick Start
+One command installs a complete Laravel stack with AI-powered code review, consistent coding standards that Claude actually follows, and GitHub workflows that let you @mention Claude in issues and PRs.
 
 ```bash
 composer require stumason/claudavel
 php artisan claudavel:install --all
-createdb your_project_name
+```
+
+## Why This Exists
+
+Claude Code is powerful, but it works better when your project has clear conventions. Claudavel gives you:
+
+- **Coding standards Claude follows** - Published to `docs/standards/` and referenced in CLAUDE.md. No more explaining the same patterns every session.
+- **AI code review on every PR** - Claude reviews your code automatically via GitHub Actions. Catches bugs, suggests improvements, checks against your standards.
+- **@claude in issues and PRs** - Mention Claude anywhere in GitHub and it responds with context about your codebase.
+- **A complete stack** - Fortify, Sanctum, Horizon, Reverb, Telescope, Pail, Wayfinder, Sqids. All configured, all working together.
+
+## Quick Start
+
+```bash
+laravel new my-app
+cd my-app
+composer require stumason/claudavel
+php artisan claudavel:install --all
+createdb my_app
 composer run dev
 ```
 
-That's it. Visit `/health` to verify everything's working.
+Add `CLAUDE_CODE_OAUTH_TOKEN` to your GitHub repo secrets to enable AI features.
 
 ## What Gets Installed
 
-### Core (always)
+### Packages
 
-| Package           | Purpose                    |
-| ----------------- | -------------------------- |
-| laravel/fortify   | Authentication backend     |
-| laravel/sanctum   | API tokens                 |
-| laravel/pail      | Real-time log tailing      |
-| laravel/wayfinder | Type-safe route generation |
-| sqids/sqids       | ID obfuscation             |
+| Package             | Purpose                                         |
+| ------------------- | ----------------------------------------------- |
+| laravel/fortify     | Authentication without Breeze/Jetstream bloat   |
+| laravel/sanctum     | API tokens                                      |
+| laravel/horizon     | Redis queue dashboard (optional)                |
+| laravel/reverb      | WebSockets without third-party services (optional) |
+| laravel/telescope   | Debug assistant (optional)                      |
+| laravel/pail        | Real-time log tailing                           |
+| laravel/wayfinder   | Type-safe routes in TypeScript                  |
+| sqids/sqids         | ID obfuscation                                  |
 
-### Optional (prompted)
+### GitHub Workflows
 
-| Package           | Purpose               |
-| ----------------- | --------------------- |
-| laravel/horizon   | Redis queue dashboard |
-| laravel/reverb    | WebSocket server      |
-| laravel/telescope | Debug assistant       |
+| Workflow                   | What it does                              |
+| -------------------------- | ----------------------------------------- |
+| claude-code-review.yml     | AI reviews every PR automatically         |
+| claude.yml                 | Responds to @claude mentions              |
+| tests.yml                  | Runs Pest with Postgres                   |
+| lint.yml                   | Pint + ESLint + Prettier                  |
+| dependabot-automerge.yml   | Auto-merges minor/patch dependency updates |
 
-## Installation Options
+### Coding Standards
 
-```bash
-php artisan claudavel:install                      # Interactive prompts
-php artisan claudavel:install --all                # Install everything
-php artisan claudavel:install --horizon --reverb   # Pick specific packages
-php artisan claudavel:install --no-interaction     # CI/CD friendly
-php artisan claudavel:install --force              # Overwrite existing files
-php artisan claudavel:install --no-workflows       # Skip GitHub workflows
-php artisan claudavel:install my-app               # Custom database name
-```
+Published to `docs/standards/` with conventions that matter:
 
-## What Changes
+- **Actions pattern** - Business logic in `app/Actions/{Domain}/`
+- **DTOs** - Type-safe data containers in `app/DataTransferObjects/`
+- **Money as integers** - Store cents, not dollars
+- **Lowercase imports** - `@/components/button` not `@/Components/Button`
 
-### Files Created
-
-```
-app/
-├── Actions/                    # Business logic goes here
-├── DataTransferObjects/        # Type-safe data containers
-├── Models/Traits/HasUid.php    # ID obfuscation trait
-├── Services/SqidService.php    # Sqid encoding/decoding
-├── Http/Controllers/HealthCheckController.php
-└── Providers/
-    ├── HorizonServiceProvider.php   (if installed)
-    └── TelescopeServiceProvider.php (if installed)
-
-config/sqids.php
-resources/js/pages/health-check.tsx
-docs/standards/                 # AI-friendly coding standards
-
-.prettierrc
-.prettierignore
-.editorconfig
-eslint.config.js
-
-.github/
-├── workflows/
-│   ├── tests.yml               # Pest tests with Postgres
-│   ├── lint.yml                # Pint + ESLint + Prettier
-│   ├── claude-code-review.yml  # AI code review on PRs
-│   ├── claude.yml              # @claude mentions
-│   └── dependabot-automerge.yml
-└── dependabot.yml              # Automated dependency updates
-```
+These get referenced in your CLAUDE.md so every Claude session knows your conventions.
 
 ### Environment
 
 ```env
 DB_CONNECTION=pgsql
-DB_DATABASE=your_project_name
 SESSION_DRIVER=redis
 CACHE_STORE=redis
 QUEUE_CONNECTION=redis
 ```
 
-### Composer Scripts
+## Features
 
-```bash
-composer run dev   # Runs server, horizon, reverb, pail, vite concurrently
-```
+### ID Obfuscation
 
-## ID Obfuscation
-
-Every model can expose obfuscated IDs instead of sequential integers:
+Never expose sequential IDs. Add the trait to any model:
 
 ```php
 use App\Models\Traits\HasUid;
@@ -124,102 +96,41 @@ class User extends Model
     use HasUid;
 }
 
-// In your code
-$user->uid;                     // "K4x9Pq" (not "1")
-User::findByUid('K4x9Pq');      // Works
-route('users.show', $user);     // Uses UID automatically
-
-// In routes - just works
-Route::get('/users/{user}', ...);  // Binds via UID
+$user->uid;  // "K4x9Pq" instead of "1"
+User::findByUid('K4x9Pq');  // Works
+Route::get('/users/{user}', ...);  // Binds automatically
 ```
 
-Configure alphabet/length in `config/sqids.php` for unique IDs per project.
-
-## Generator Commands
-
-Claudavel adds artisan commands that generate consistent, well-structured code:
+### Generator Commands
 
 ```bash
-# Create an Action (business logic)
 php artisan make:action User/UpdateProfile
-php artisan make:action Order/ApproveOrder
-
-# Create a DTO with properties
 php artisan make:dto UserProfile --properties=id:int,name:string,email:?string
-php artisan make:dto OrderData --properties=id:int,total:int --model=Order
-
-# Generate TypeScript interfaces from all DTOs
-php artisan types:generate
+php artisan types:generate  # Generates TypeScript interfaces from DTOs
 ```
 
-### TypeScript Generation
+### Health Check
 
-The `types:generate` command scans `app/DataTransferObjects/` and creates TypeScript interfaces:
+The `/health` endpoint verifies database, Redis, cache, queue, and storage. Use it for load balancer checks.
 
-```typescript
-// resources/js/types/generated.d.ts (auto-generated)
-export interface UserProfileData {
-    id: number;
-    name: string;
-    email?: string;
-}
+## Installation Options
+
+```bash
+php artisan claudavel:install                      # Interactive prompts
+php artisan claudavel:install --all                # Install everything
+php artisan claudavel:install --horizon --reverb   # Pick specific packages
+php artisan claudavel:install --no-workflows       # Skip GitHub workflows
+php artisan claudavel:install --force              # Overwrite existing files
 ```
 
-Import in your React components:
-
-```tsx
-import type { UserProfileData } from '@/types/generated';
-```
-
-Run `php artisan types:generate` after modifying DTOs to keep types in sync.
-
-## Coding Standards
-
-Claudavel publishes `docs/standards/` with conventions that AI assistants actually follow:
-
-- **Actions pattern** - Business logic in `app/Actions/{Domain}/`
-- **Money as integers** - Store cents, not dollars
-- **Lowercase imports** - Prevents Linux build failures
-- **createQuietly in tests** - Avoids event side effects
-
-These aren't documentation theatre. They're the minimal set of rules that prevent real bugs.
-
-## GitHub Workflows
-
-Claudavel sets up a complete CI/CD pipeline:
-
-| Workflow | Trigger | Purpose |
-| -------- | ------- | ------- |
-| tests.yml | Push/PR to main | Runs Pest with Postgres |
-| lint.yml | Push/PR to main | Pint, ESLint, Prettier checks |
-| claude-code-review.yml | PR opened | AI reviews code for issues |
-| claude.yml | @claude mention | AI responds to issue/PR comments |
-| dependabot-automerge.yml | Dependabot PR | Auto-merges minor/patch updates |
-
-### Setup
-
-Add `CLAUDE_CODE_OAUTH_TOKEN` to your repository secrets for Claude integration.
-
-Use `--no-workflows` if you don't want these installed.
-
-## Health Check
-
-The `/health` endpoint verifies:
-
-- Database connection
-- Redis connection
-- Cache read/write
-- Queue dispatch
-- Storage write
-
-Use it for load balancer health checks and deploy verification.
+The command is idempotent - run it on existing projects and it only installs what's missing.
 
 ## Requirements
 
 - PHP 8.3+
 - Laravel 12+
-- Postgres (local or remote)
-- Redis (local or remote)
+- Postgres
+- Redis
 
 ## License
 
