@@ -125,11 +125,7 @@ class InstallCommand extends Command
 
     private function installPackages(): void
     {
-        $composerJson = json_decode(File::get(base_path('composer.json')), true);
-        $installed = array_merge(
-            array_keys($composerJson['require'] ?? []),
-            array_keys($composerJson['require-dev'] ?? [])
-        );
+        $installed = $this->getInstalledPackages();
 
         // Core packages (only add if not already installed)
         $allPackages = [
@@ -157,10 +153,11 @@ class InstallCommand extends Command
         $packages = array_filter($allPackages, fn ($pkg) => ! in_array($pkg, $installed));
 
         if (! empty($packages)) {
-            $packageList = implode(' ', $packages);
+            // Use array format to avoid any shell escaping issues
+            $packages = array_values($packages);
             spin(
-                callback: function () use ($packageList) {
-                    Process::run("composer require {$packageList} --no-interaction")->throw();
+                callback: function () use ($packages) {
+                    Process::run(array_merge(['composer', 'require', '--no-interaction'], $packages))->throw();
                 },
                 message: 'Installing Composer packages...'
             );
@@ -183,6 +180,35 @@ class InstallCommand extends Command
         if ($this->installTelescope) {
             $this->publishPackageAssets('telescope', 'Laravel\Telescope\TelescopeServiceProvider', 'create_telescope');
         }
+    }
+
+    /**
+     * Get list of installed packages from composer.json.
+     *
+     * @return array<string>
+     */
+    private function getInstalledPackages(): array
+    {
+        $composerPath = base_path('composer.json');
+
+        if (! File::exists($composerPath)) {
+            warning('composer.json not found, assuming no packages installed');
+
+            return [];
+        }
+
+        $composerJson = json_decode(File::get($composerPath), true);
+
+        if ($composerJson === null) {
+            warning('Invalid composer.json format, assuming no packages installed');
+
+            return [];
+        }
+
+        return array_merge(
+            array_keys($composerJson['require'] ?? []),
+            array_keys($composerJson['require-dev'] ?? [])
+        );
     }
 
     /**
