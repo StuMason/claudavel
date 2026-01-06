@@ -25,9 +25,16 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewHorizon', function ($user = null) {
-            // TODO: Lock this down before production
-            // return in_array($user?->email, ['admin@example.com']);
-            return true;
+            // Allow access in local environment for development
+            if (app()->environment('local')) {
+                return true;
+            }
+
+            // In production, restrict to specific admin emails
+            // TODO: Add your admin emails here
+            return in_array($user?->email, [
+                // 'admin@example.com',
+            ]);
         });
     }
 }

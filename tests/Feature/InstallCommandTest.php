@@ -71,14 +71,16 @@ test('health check controller stub is valid php', function () {
     expect($content)->toContain('public function __invoke()');
 });
 
-test('service provider stubs have TODO for gate', function () {
+test('service provider stubs have secure gates', function () {
     $stubsPath = dirname(__DIR__, 2).'/stubs';
 
     $horizonContent = File::get("{$stubsPath}/HorizonServiceProvider.php.stub");
-    expect($horizonContent)->toContain('TODO: Lock this down before production');
+    expect($horizonContent)->toContain("app()->environment('local')");
+    expect($horizonContent)->toContain('TODO: Add your admin emails here');
 
     $telescopeContent = File::get("{$stubsPath}/TelescopeServiceProvider.php.stub");
-    expect($telescopeContent)->toContain('TODO: Lock this down before production');
+    expect($telescopeContent)->toContain("app()->environment('local')");
+    expect($telescopeContent)->toContain('TODO: Add your admin emails here');
 });
 
 test('HasUid stub is valid php', function () {
