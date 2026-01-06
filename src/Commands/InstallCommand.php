@@ -125,8 +125,14 @@ class InstallCommand extends Command
 
     private function installPackages(): void
     {
-        // Core packages (always installed)
-        $packages = [
+        $composerJson = json_decode(File::get(base_path('composer.json')), true);
+        $installed = array_merge(
+            array_keys($composerJson['require'] ?? []),
+            array_keys($composerJson['require-dev'] ?? [])
+        );
+
+        // Core packages (only add if not already installed)
+        $allPackages = [
             'laravel/fortify',
             'laravel/sanctum',
             'laravel/pail',
@@ -136,52 +142,68 @@ class InstallCommand extends Command
 
         // Optional packages
         if ($this->installHorizon) {
-            $packages[] = 'laravel/horizon';
+            $allPackages[] = 'laravel/horizon';
         }
 
         if ($this->installReverb) {
-            $packages[] = 'laravel/reverb';
+            $allPackages[] = 'laravel/reverb';
         }
 
         if ($this->installTelescope) {
-            $packages[] = 'laravel/telescope';
+            $allPackages[] = 'laravel/telescope';
         }
 
-        $packageList = implode(' ', $packages);
+        // Filter out already installed packages
+        $packages = array_filter($allPackages, fn ($pkg) => ! in_array($pkg, $installed));
 
-        spin(
-            callback: function () use ($packageList) {
-                Process::run("composer require {$packageList} --no-interaction")->throw();
-            },
-            message: 'Installing Composer packages...'
-        );
+        if (! empty($packages)) {
+            $packageList = implode(' ', $packages);
+            spin(
+                callback: function () use ($packageList) {
+                    Process::run("composer require {$packageList} --no-interaction")->throw();
+                },
+                message: 'Installing Composer packages...'
+            );
+        } else {
+            info('All packages already installed');
+        }
 
-        // Publish package assets
-        spin(
-            callback: fn () => Process::run('php artisan vendor:publish --provider="Laravel\Fortify\FortifyServiceProvider" --no-interaction')->throw(),
-            message: 'Publishing Fortify assets...'
-        );
+        // Publish package assets - use tag-based publishing to avoid duplicate migrations
+        // Check for existing migrations by looking for the migration pattern, not just config files
+        $this->publishPackageAssets('fortify', 'Laravel\Fortify\FortifyServiceProvider', 'add_two_factor');
 
         if ($this->installHorizon) {
-            spin(
-                callback: fn () => Process::run('php artisan vendor:publish --provider="Laravel\Horizon\HorizonServiceProvider" --no-interaction')->throw(),
-                message: 'Publishing Horizon assets...'
-            );
+            $this->publishPackageAssets('horizon', 'Laravel\Horizon\HorizonServiceProvider', 'create_jobs_table');
         }
 
         if ($this->installReverb) {
-            spin(
-                callback: fn () => Process::run('php artisan vendor:publish --provider="Laravel\Reverb\ReverbServiceProvider" --no-interaction')->throw(),
-                message: 'Publishing Reverb assets...'
-            );
+            $this->publishPackageAssets('reverb', 'Laravel\Reverb\ReverbServiceProvider');
         }
 
         if ($this->installTelescope) {
-            spin(
-                callback: fn () => Process::run('php artisan vendor:publish --provider="Laravel\Telescope\TelescopeServiceProvider" --no-interaction')->throw(),
-                message: 'Publishing Telescope assets...'
-            );
+            $this->publishPackageAssets('telescope', 'Laravel\Telescope\TelescopeServiceProvider', 'create_telescope');
         }
+    }
+
+    /**
+     * Publish package assets, skipping if migrations already exist.
+     */
+    private function publishPackageAssets(string $name, string $provider, ?string $migrationPattern = null): void
+    {
+        // If migration pattern provided, check if migrations already exist
+        if ($migrationPattern !== null) {
+            $existingMigrations = glob(database_path("migrations/*{$migrationPattern}*"));
+            if (! empty($existingMigrations)) {
+                info(ucfirst($name).' assets already published, skipping');
+
+                return;
+            }
+        }
+
+        spin(
+            callback: fn () => Process::run("php artisan vendor:publish --provider=\"{$provider}\" --no-interaction")->throw(),
+            message: "Publishing {$name} assets..."
+        );
     }
 
     private function runArtisanInstallCommands(): void
