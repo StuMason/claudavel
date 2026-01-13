@@ -1,0 +1,18 @@
+{
+    "installed": [
+        {
+            "name": "laravel/pint",
+            "direct-dependency": true,
+            "homepage": "https://laravel.com",
+            "source": "https://github.com/laravel/pint",
+            "version": "v1.26.0",
+            "release-age": "1 month old",
+            "release-date": "2025-11-25T21:15:52+00:00",
+            "latest": "v1.27.0",
+            "latest-status": "semver-safe-update",
+            "latest-release-date": "2026-01-05T16:49:17+00:00",
+            "description": "An opinionated code formatter for PHP.",
+            "abandoned": false
+        }
+    ]
+}
