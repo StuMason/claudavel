@@ -151,17 +151,44 @@ class GenerateTypesCommand extends Command
 
         $typeName = $type->getName();
 
+        // Handle arrays with docblock hints (check both @var and @param for constructor-promoted properties)
+        if ($typeName === 'array') {
+            $docComment = $property->getDocComment();
+
+            // Also check constructor docblock for @param annotations (constructor promotion)
+            $constructorDoc = '';
+            $class = $property->getDeclaringClass();
+            $constructor = $class->getConstructor();
+            if ($constructor) {
+                $constructorDoc = $constructor->getDocComment() ?: '';
+            }
+
+            $combinedDoc = $docComment.$constructorDoc;
+            $propertyName = $property->getName();
+
+            // Match array<KeyType, ValueType> pattern in @var or @param
+            // @var array<string, mixed> or @param array<string, mixed> $propertyName
+            if (preg_match('/@(?:var|param)\s+array<(\w+),\s*(\w+)>(?:\s+\$'.preg_quote($propertyName, '/').')?/', $combinedDoc, $matches)) {
+                $keyType = $matches[1];
+                $valueType = $matches[2];
+                $tsValueType = $this->phpToTsTypes[$valueType] ?? $valueType;
+
+                // If key is string, it's an associative array -> Record<string, T>
+                if ($keyType === 'string') {
+                    return "Record<string, {$tsValueType}>";
+                }
+
+                // If key is int, it's a numeric array -> T[]
+                return "{$tsValueType}[]";
+            }
+
+            // Fallback for untyped arrays
+            return 'unknown[]';
+        }
+
         // Check our mapping
         if (isset($this->phpToTsTypes[$typeName])) {
             return $this->phpToTsTypes[$typeName];
-        }
-
-        // Handle arrays with docblock hints
-        $docComment = $property->getDocComment();
-        if ($docComment && preg_match('/@var\s+array<[^,]+,\s*(\w+)>/', $docComment, $matches)) {
-            $innerType = $this->phpToTsTypes[$matches[1]] ?? $matches[1];
-
-            return "{$innerType}[]";
         }
 
         // Handle other DTO references
