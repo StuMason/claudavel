@@ -651,7 +651,15 @@ PHP;
     {
         spin(
             callback: function () {
-                Process::run('php artisan migrate --force')->throw();
+                // Clear DB environment variables to force reading from .env
+                // The parent process has stale env vars that would override the updated .env
+                $envVarsToClear = [
+                    'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE',
+                    'DB_USERNAME', 'DB_PASSWORD',
+                ];
+                $envPrefix = implode(' ', array_map(fn ($var) => "-u {$var}", $envVarsToClear));
+
+                Process::run("env {$envPrefix} php artisan migrate --force")->throw();
             },
             message: 'Running migrations...'
         );
