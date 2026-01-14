@@ -36,12 +36,13 @@ class InstallCommand extends Command
 
         $this->determineProjectName();
         $this->determinePackagesToInstall();
+        $this->disableDatabaseConnection(); // Prevent SQLite files from being created during install
         $this->installPackages();
         $this->runArtisanInstallCommands();
         $this->publishStubs();
         $this->updateComposerJson();
         $this->updateBootstrapProviders();
-        $this->updateEnvFile(); // Must run LAST to avoid composer hooks hitting non-existent DB
+        $this->configureDatabaseConnection(); // Now safe to set up PostgreSQL
         $this->runMigrations();
 
         $this->newLine();
@@ -373,7 +374,35 @@ class InstallCommand extends Command
         info("Published {$name}");
     }
 
-    private function updateEnvFile(): void
+    /**
+     * Disable database connection early to prevent SQLite files from being created.
+     *
+     * Laravel defaults to SQLite, which creates a database file when any artisan
+     * command accesses the database. By setting DB_CONNECTION=null early, we prevent
+     * stray database files (named after the project) from appearing in the project root.
+     */
+    private function disableDatabaseConnection(): void
+    {
+        $envPath = base_path('.env');
+
+        if (! File::exists($envPath)) {
+            return;
+        }
+
+        $content = File::get($envPath);
+
+        // Only disable if currently using SQLite (Laravel default)
+        if (str_contains($content, 'DB_CONNECTION=sqlite')) {
+            $content = preg_replace('/^DB_CONNECTION=sqlite/m', 'DB_CONNECTION=null', $content);
+            File::put($envPath, $content);
+            Process::run('php artisan config:clear --no-interaction');
+        }
+    }
+
+    /**
+     * Configure the database connection and other environment settings.
+     */
+    private function configureDatabaseConnection(): void
     {
         $envPath = base_path('.env');
 
@@ -392,7 +421,8 @@ class InstallCommand extends Command
             $updates[] = 'APP_NAME';
         }
 
-        if (str_contains($content, 'DB_CONNECTION=sqlite') || preg_match('/^#\s*DB_HOST=/m', $content)) {
+        // Configure PostgreSQL (works whether DB_CONNECTION is sqlite, null, or commented)
+        if (str_contains($content, 'DB_CONNECTION=sqlite') || str_contains($content, 'DB_CONNECTION=null') || preg_match('/^#\s*DB_HOST=/m', $content)) {
             $dbSettings = [
                 'DB_CONNECTION' => 'pgsql',
                 'DB_HOST' => '127.0.0.1',
@@ -621,7 +651,15 @@ PHP;
     {
         spin(
             callback: function () {
-                Process::run('php artisan migrate --force')->throw();
+                // Clear DB environment variables to force reading from .env
+                // The parent process has stale env vars that would override the updated .env
+                $envVarsToClear = [
+                    'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE',
+                    'DB_USERNAME', 'DB_PASSWORD',
+                ];
+                $envPrefix = implode(' ', array_map(fn ($var) => "-u {$var}", $envVarsToClear));
+
+                Process::run("env {$envPrefix} php artisan migrate --force")->throw();
             },
             message: 'Running migrations...'
         );

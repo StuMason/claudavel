@@ -246,3 +246,74 @@ PHP;
     expect($content)->toContain('export interface UserData {');
     expect($content)->toContain('export interface OrderData {');
 });
+
+test('maps array<string, mixed> to Record<string, unknown>', function () {
+    File::ensureDirectoryExists(app_path('DataTransferObjects'));
+
+    $dtoContent = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\DataTransferObjects;
+
+final readonly class MetadataData
+{
+    /**
+     * @param array<string, mixed> $metadata
+     * @param array<int, string> $tags
+     */
+    public function __construct(
+        public int $id,
+        public array $metadata,
+        public array $tags,
+    ) {}
+}
+PHP;
+
+    File::put(app_path('DataTransferObjects/MetadataData.php'), $dtoContent);
+
+    $this->artisan('types:generate')
+        ->assertSuccessful();
+
+    $content = File::get(resource_path('js/types/generated.d.ts'));
+    expect($content)->toContain('export interface MetadataData {');
+    expect($content)->toContain('id: number;');
+    // array<string, mixed> should map to Record<string, unknown>
+    expect($content)->toContain('metadata: Record<string, unknown>;');
+    // array<int, string> should map to string[]
+    expect($content)->toContain('tags: string[];');
+});
+
+test('handles @var annotation for array types', function () {
+    File::ensureDirectoryExists(app_path('DataTransferObjects'));
+
+    $dtoContent = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\DataTransferObjects;
+
+final readonly class ConfigData
+{
+    /** @var array<string, mixed> */
+    public array $settings;
+
+    public function __construct(
+        public int $id,
+        array $settings,
+    ) {
+        $this->settings = $settings;
+    }
+}
+PHP;
+
+    File::put(app_path('DataTransferObjects/ConfigData.php'), $dtoContent);
+
+    $this->artisan('types:generate')
+        ->assertSuccessful();
+
+    $content = File::get(resource_path('js/types/generated.d.ts'));
+    expect($content)->toContain('settings: Record<string, unknown>;');
+});

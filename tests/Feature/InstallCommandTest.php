@@ -194,6 +194,45 @@ test('CLAUDE.md stub contains required sections', function () {
     expect($content)->toContain('docs/standards');
 });
 
+test('CLAUDE.md stub contains git workflow documentation', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+    $content = File::get("{$stubsPath}/CLAUDE.md.stub");
+
+    expect($content)->toContain('## Git Workflow');
+    expect($content)->toContain('Slice-Based Development');
+    expect($content)->toContain('feature/');
+});
+
+test('CLAUDE.md stub contains gh CLI documentation', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+    $content = File::get("{$stubsPath}/CLAUDE.md.stub");
+
+    expect($content)->toContain('## GitHub Interactions');
+    expect($content)->toContain('gh issue');
+    expect($content)->toContain('gh pr');
+});
+
+test('CLAUDE.md stub contains async job pattern documentation', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+    $content = File::get("{$stubsPath}/CLAUDE.md.stub");
+
+    expect($content)->toContain('## Async Job Pattern');
+    expect($content)->toContain('Controller');
+    expect($content)->toContain('Job');
+    expect($content)->toContain('Action');
+    expect($content)->toContain('ShouldQueue');
+});
+
+test('CLAUDE.md stub contains Reverb broadcasting documentation', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs';
+    $content = File::get("{$stubsPath}/CLAUDE.md.stub");
+
+    expect($content)->toContain('## Real-Time Updates with Reverb');
+    expect($content)->toContain('useEcho');
+    expect($content)->toContain('ShouldBroadcast');
+    expect($content)->toContain('PrivateChannel');
+});
+
 test('config stubs are properly formatted', function () {
     $stubsPath = dirname(__DIR__, 2).'/stubs';
 
@@ -268,6 +307,28 @@ test('tests workflow has postgres setup', function () {
     expect($content)->toContain('Setup PostgreSQL');
     expect($content)->toContain('pdo_pgsql');
     expect($content)->toContain('vendor/bin/pest');
+});
+
+test('workflow stubs use current action versions', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
+
+    // Test the tests.yml.stub
+    $testsContent = File::get("{$stubsPath}/tests.yml.stub");
+    expect($testsContent)->toContain('actions/checkout@v6');
+    expect($testsContent)->toContain('actions/setup-node@v6');
+
+    // Test the lint.yml.stub
+    $lintContent = File::get("{$stubsPath}/lint.yml.stub");
+    expect($lintContent)->toContain('actions/checkout@v6');
+    expect($lintContent)->toContain('actions/setup-node@v6');
+
+    // Test the claude.yml.stub
+    $claudeContent = File::get("{$stubsPath}/claude.yml.stub");
+    expect($claudeContent)->toContain('actions/checkout@v6');
+
+    // Test the claude-code-review.yml.stub
+    $reviewContent = File::get("{$stubsPath}/claude-code-review.yml.stub");
+    expect($reviewContent)->toContain('actions/checkout@v6');
 });
 
 test('lint workflow checks pint and eslint', function () {
