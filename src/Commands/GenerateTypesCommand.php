@@ -166,9 +166,8 @@ class GenerateTypesCommand extends Command
             $combinedDoc = $docComment.$constructorDoc;
             $propertyName = $property->getName();
 
-            // Match array<KeyType, ValueType> pattern in @var or @param
-            // @var array<string, mixed> or @param array<string, mixed> $propertyName
-            if (preg_match('/@(?:var|param)\s+array<(\w+),\s*(\w+)>(?:\s+\$'.preg_quote($propertyName, '/').')?/', $combinedDoc, $matches)) {
+            // Try @param first (for constructor-promoted properties) - requires property name match
+            if (preg_match('/@param\s+array<(\w+),\s*(\w+)>\s+\$'.preg_quote($propertyName, '/').'/', $combinedDoc, $matches)) {
                 $keyType = $matches[1];
                 $valueType = $matches[2];
                 $tsValueType = $this->phpToTsTypes[$valueType] ?? $valueType;
@@ -179,6 +178,19 @@ class GenerateTypesCommand extends Command
                 }
 
                 // If key is int, it's a numeric array -> T[]
+                return "{$tsValueType}[]";
+            }
+
+            // Try @var (for regular properties with docblock)
+            if (preg_match('/@var\s+array<(\w+),\s*(\w+)>/', $docComment ?: '', $matches)) {
+                $keyType = $matches[1];
+                $valueType = $matches[2];
+                $tsValueType = $this->phpToTsTypes[$valueType] ?? $valueType;
+
+                if ($keyType === 'string') {
+                    return "Record<string, {$tsValueType}>";
+                }
+
                 return "{$tsValueType}[]";
             }
 
