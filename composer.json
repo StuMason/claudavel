@@ -32,8 +32,12 @@
     },
     "scripts": {
         "test": "pest",
-        "lint": "pint",
-        "analyse": "phpstan analyse"
+        "lint": "pint --test",
+        "lint:fix": "pint",
+        "analyse": "phpstan analyse",
+        "hooks:install": "cp hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
+        "post-install-cmd": "@hooks:install",
+        "post-update-cmd": "@hooks:install"
     },
     "extra": {
         "laravel": {

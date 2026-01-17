@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Pre-commit hook for Claudavel
+# Runs linting and tests before allowing commit
+
+echo "Running pre-commit checks..."
+
+# Run Pint (linting)
+echo "→ Running Pint..."
+./vendor/bin/pint --test
+if [ $? -ne 0 ]; then
+    echo "❌ Pint found formatting issues. Run './vendor/bin/pint' to fix."
+    exit 1
+fi
+
+# Run tests
+echo "→ Running tests..."
+./vendor/bin/pest
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed."
+    exit 1
+fi
+
+echo "✅ All checks passed!"
