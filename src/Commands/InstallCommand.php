@@ -721,5 +721,6 @@ PHP;
 
         $this->newLine();
         $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration');
+        info('Run <comment>claude /install-github-app</comment> to configure GitHub integration');
     }
 }
