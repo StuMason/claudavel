@@ -719,7 +719,38 @@ PHP;
             $force
         );
 
+        // CODEOWNERS
+        $this->publishFile(
+            "{$stubsPath}/.github/CODEOWNERS.stub",
+            base_path('.github/CODEOWNERS'),
+            '.github/CODEOWNERS',
+            $force
+        );
+
+        // Pull request template
+        $this->publishFile(
+            "{$stubsPath}/.github/PULL_REQUEST_TEMPLATE.md.stub",
+            base_path('.github/PULL_REQUEST_TEMPLATE.md'),
+            '.github/PULL_REQUEST_TEMPLATE.md',
+            $force
+        );
+
+        // Issue templates
+        $issueTemplatesPath = base_path('.github/ISSUE_TEMPLATE');
+        File::ensureDirectoryExists($issueTemplatesPath);
+
+        $issueTemplates = ['bug_report.yml', 'config.yml', 'feature_request.yml'];
+        foreach ($issueTemplates as $template) {
+            $this->publishFile(
+                "{$stubsPath}/.github/ISSUE_TEMPLATE/{$template}.stub",
+                "{$issueTemplatesPath}/{$template}",
+                ".github/ISSUE_TEMPLATE/{$template}",
+                $force
+            );
+        }
+
         $this->newLine();
         $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration');
+        $this->components->warn('Update .github/CODEOWNERS with your GitHub username');
     }
 }
