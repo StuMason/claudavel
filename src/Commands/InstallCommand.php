@@ -477,6 +477,32 @@ class InstallCommand extends Command
             $updates[] = 'ADMIN_EMAILS';
         }
 
+        // Configure mail settings for Mailpit
+        if (! str_contains($content, 'MAIL_MAILER=smtp') || str_contains($content, 'MAIL_MAILER=log')) {
+            $mailSettings = [
+                'MAIL_MAILER' => 'smtp',
+                'MAIL_SCHEME' => 'null',
+                'MAIL_HOST' => '127.0.0.1',
+                'MAIL_PORT' => '1025',
+                'MAIL_USERNAME' => 'null',
+                'MAIL_PASSWORD' => 'null',
+                'MAIL_FROM_ADDRESS' => '"hello@example.com"',
+            ];
+
+            foreach ($mailSettings as $key => $value) {
+                if (preg_match("/^{$key}=/m", $content)) {
+                    $content = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $content);
+                } else {
+                    // Add mail settings if they don't exist
+                    if ($key === 'MAIL_MAILER') {
+                        $content .= "\n# Mail Configuration (Mailpit)\n";
+                    }
+                    $content .= "{$key}={$value}\n";
+                }
+            }
+            $updates[] = 'MAIL_*';
+        }
+
         if (! empty($updates)) {
             File::put($envPath, $content);
             info('Updated .env: '.implode(', ', $updates));
@@ -586,8 +612,9 @@ PHP;
         $devCommands[] = 'php artisan schedule:work';
         $devCommands[] = 'php artisan pail --timeout=0';
         $devCommands[] = 'npm run dev';
+        $devCommands[] = 'mailpit';
 
-        $colors = ['#93c5fd', '#c4b5fd', '#fb7185', '#fdba74', '#4ade80', '#fbbf24'];
+        $colors = ['#93c5fd', '#c4b5fd', '#fb7185', '#fdba74', '#4ade80', '#fbbf24', '#f472b6'];
         $names = ['server'];
 
         if ($this->installHorizon) {
@@ -599,6 +626,7 @@ PHP;
         $names[] = 'scheduler';
         $names[] = 'logs';
         $names[] = 'vite';
+        $names[] = 'mailpit';
 
         $colorStr = implode(',', array_slice($colors, 0, count($names)));
         $nameStr = implode(',', $names);
