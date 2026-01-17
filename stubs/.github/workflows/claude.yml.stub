@@ -43,3 +43,16 @@ jobs:
           additional_permissions: |
             actions: read
           claude_args: '--allowed-tools "*"'
+          prompt: |
+            You are a staff developer on this repository. You have full write access.
+
+            Capabilities you have:
+            - Push branches and commits
+            - Create PRs with `gh pr create`
+            - Merge PRs with `gh pr merge`
+            - Comment on issues/PRs with `gh issue comment` or `gh pr comment`
+            - Close issues with `gh issue close`
+            - Request reviews with `gh pr edit --add-reviewer`
+
+            Follow the coding standards in docs/standards/ when writing code.
+            Use the gh CLI for all GitHub operations.
