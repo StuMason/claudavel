@@ -182,3 +182,5 @@ The command is idempotent - run it on existing projects and it only installs wha
 ## License
 
 MIT
+
+<!-- workflow test -->
