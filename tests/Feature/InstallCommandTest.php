@@ -340,14 +340,16 @@ test('lint workflow checks pint and eslint', function () {
     expect($content)->toContain('npm run format:check');
 });
 
-test('claude workflows skip dependabot', function () {
+test('claude workflows have access controls', function () {
     $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
 
     $claudeReview = File::get("{$stubsPath}/claude-code-review.yml.stub");
     expect($claudeReview)->toContain("github.actor != 'dependabot[bot]'");
 
+    // claude.yml uses author_association for security
     $claude = File::get("{$stubsPath}/claude.yml.stub");
-    expect($claude)->toContain("github.actor != 'dependabot[bot]'");
+    expect($claude)->toContain("author_association == 'OWNER'");
+    expect($claude)->toContain("author_association == 'COLLABORATOR'");
 });
 
 test('claude workflows use oauth token', function () {
@@ -375,4 +377,42 @@ test('command has no-workflows option', function () {
     $definition = $command->getDefinition();
 
     expect($definition->hasOption('no-workflows'))->toBeTrue();
+});
+
+test('github templates stubs exist', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github';
+
+    expect(File::exists("{$stubsPath}/CODEOWNERS.stub"))->toBeTrue();
+    expect(File::exists("{$stubsPath}/PULL_REQUEST_TEMPLATE.md.stub"))->toBeTrue();
+    expect(File::exists("{$stubsPath}/ISSUE_TEMPLATE/bug_report.yml.stub"))->toBeTrue();
+    expect(File::exists("{$stubsPath}/ISSUE_TEMPLATE/config.yml.stub"))->toBeTrue();
+    expect(File::exists("{$stubsPath}/ISSUE_TEMPLATE/feature_request.yml.stub"))->toBeTrue();
+});
+
+test('issue templates are valid yaml', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github/ISSUE_TEMPLATE';
+
+    $bugReport = File::get("{$stubsPath}/bug_report.yml.stub");
+    expect($bugReport)->toContain('name: Bug Report');
+    expect($bugReport)->toContain('labels:');
+    expect($bugReport)->toContain('body:');
+
+    $featureRequest = File::get("{$stubsPath}/feature_request.yml.stub");
+    expect($featureRequest)->toContain('name: Feature Request');
+    expect($featureRequest)->toContain('labels:');
+    expect($featureRequest)->toContain('body:');
+
+    $config = File::get("{$stubsPath}/config.yml.stub");
+    expect($config)->toContain('blank_issues_enabled:');
+});
+
+test('pull request template has checklist', function () {
+    $stubsPath = dirname(__DIR__, 2).'/stubs/.github';
+    $content = File::get("{$stubsPath}/PULL_REQUEST_TEMPLATE.md.stub");
+
+    expect($content)->toContain('## Summary');
+    expect($content)->toContain('## Changes');
+    expect($content)->toContain('## Test plan');
+    expect($content)->toContain('## Checklist');
+    expect($content)->toContain('docs/standards/');
 });
