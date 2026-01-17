@@ -477,6 +477,27 @@ class InstallCommand extends Command
             $updates[] = 'ADMIN_EMAILS';
         }
 
+        // Configure Mailpit for local email testing
+        $mailSettings = [
+            'MAIL_MAILER' => 'smtp',
+            'MAIL_HOST' => '127.0.0.1',
+            'MAIL_PORT' => '1025',
+            'MAIL_USERNAME' => 'null',
+            'MAIL_PASSWORD' => 'null',
+            'MAIL_FROM_ADDRESS' => '"hello@example.com"',
+        ];
+
+        $mailUpdated = false;
+        foreach ($mailSettings as $key => $value) {
+            if (preg_match("/^{$key}=(?!".preg_quote($value, '/').')/m', $content)) {
+                $content = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $content);
+                $mailUpdated = true;
+            }
+        }
+        if ($mailUpdated) {
+            $updates[] = 'MAIL_* (Mailpit)';
+        }
+
         if (! empty($updates)) {
             File::put($envPath, $content);
             info('Updated .env: '.implode(', ', $updates));
@@ -586,8 +607,9 @@ PHP;
         $devCommands[] = 'php artisan schedule:work';
         $devCommands[] = 'php artisan pail --timeout=0';
         $devCommands[] = 'npm run dev';
+        $devCommands[] = 'mailpit';
 
-        $colors = ['#93c5fd', '#c4b5fd', '#fb7185', '#fdba74', '#4ade80', '#fbbf24'];
+        $colors = ['#93c5fd', '#c4b5fd', '#fb7185', '#fdba74', '#4ade80', '#fbbf24', '#f472b6'];
         $names = ['server'];
 
         if ($this->installHorizon) {
@@ -599,6 +621,7 @@ PHP;
         $names[] = 'scheduler';
         $names[] = 'logs';
         $names[] = 'vite';
+        $names[] = 'mailpit';
 
         $colorStr = implode(',', array_slice($colors, 0, count($names)));
         $nameStr = implode(',', $names);
@@ -606,7 +629,7 @@ PHP;
 
         $composer['scripts']['dev'] = [
             'Composer\\Config::disableProcessTimeout',
-            "npx concurrently -c \"{$colorStr}\" \"{$cmdStr}\" --names={$nameStr} --kill-others",
+            "npx concurrently -c \"{$colorStr}\" \"{$cmdStr}\" --names={$nameStr} --kill-others --kill-signal=SIGKILL",
         ];
 
         if ($this->installTelescope) {
