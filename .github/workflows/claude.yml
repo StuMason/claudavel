@@ -37,7 +37,9 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: '--model claude-opus-4-5-20251101'
+          claude_args: |
+            --model claude-opus-4-5-20251101
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch"
           prompt: |
             You are a staff developer on this repository. You have full write access.
 
