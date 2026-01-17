@@ -340,14 +340,17 @@ test('lint workflow checks pint and eslint', function () {
     expect($content)->toContain('npm run format:check');
 });
 
-test('claude workflows skip dependabot', function () {
+test('claude workflows have access controls', function () {
     $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
 
+    // Code review skips dependabot
     $claudeReview = File::get("{$stubsPath}/claude-code-review.yml.stub");
     expect($claudeReview)->toContain("github.actor != 'dependabot[bot]'");
 
+    // Claude mentions require owner/collaborator (security: prevents unauthorized trigger)
     $claude = File::get("{$stubsPath}/claude.yml.stub");
-    expect($claude)->toContain("github.actor != 'dependabot[bot]'");
+    expect($claude)->toContain("author_association == 'OWNER'");
+    expect($claude)->toContain("author_association == 'COLLABORATOR'");
 });
 
 test('claude workflows use oauth token', function () {
