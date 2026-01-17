@@ -44,19 +44,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          additional_permissions: |
-            actions: read
-          claude_args: '--allowed-tools "*"'
-          prompt: |
-            You are a staff developer on this repository. You have full write access.
-
-            Capabilities you have:
-            - Push branches and commits
-            - Create PRs with `gh pr create`
-            - Merge PRs with `gh pr merge`
-            - Comment on issues/PRs with `gh issue comment` or `gh pr comment`
-            - Close issues with `gh issue close`
-            - Request reviews with `gh pr edit --add-reviewer`
-
-            Follow the coding standards in docs/standards/ when writing code.
-            Use the gh CLI for all GitHub operations.
+          claude_args: |
+            --model claude-opus-4-5
+            --allowedTools "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch"
+            --system-prompt "You can create PRs with 'gh pr create', merge with 'gh pr merge', and comment with 'gh issue comment'. Use gh CLI for all GitHub operations."
