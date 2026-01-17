@@ -62,6 +62,29 @@ Add `CLAUDE_CODE_OAUTH_TOKEN` to your GitHub repo secrets to enable AI features.
 | lint.yml                   | Pint + ESLint + Prettier                  |
 | dependabot-automerge.yml   | Auto-merges minor/patch dependency updates |
 
+#### @claude Workflow Security
+
+The `claude.yml` workflow gives Claude write access to your repository. This is intentional - it allows Claude to create branches, push commits, and open PRs on your behalf.
+
+**Who can trigger Claude:**
+- Only repository **owners** and **collaborators** can trigger Claude via @mentions
+- External contributors and random users cannot trigger Claude, even on public repos
+
+**What Claude can do:**
+- Create and push branches
+- Create pull requests (`gh pr create`)
+- Merge pull requests (`gh pr merge`)
+- Comment on issues and PRs
+- Close issues
+
+**What Claude cannot do:**
+- Delete branches or force push
+- Modify repository settings
+- Access secrets beyond `CLAUDE_CODE_OAUTH_TOKEN`
+- Trigger on comments from non-collaborators
+
+If you need stricter controls, you can modify the workflow's `if` condition or remove `claude.yml` entirely with `--no-workflows`.
+
 ### Coding Standards
 
 Published to `docs/standards/` with conventions that matter:
