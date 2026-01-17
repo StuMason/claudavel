@@ -30,7 +30,15 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
+        ignores: [
+            'vendor',
+            'node_modules',
+            'public',
+            'bootstrap/ssr',
+            'tailwind.config.js',
+            'resources/js/actions/**', // Wayfinder generated
+            'resources/js/routes/**', // Wayfinder generated
+        ],
     },
     prettier,
 ];

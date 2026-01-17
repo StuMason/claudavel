@@ -58,9 +58,13 @@ Add `CLAUDE_CODE_OAUTH_TOKEN` to your GitHub repo secrets to enable AI features.
 | -------------------------- | ----------------------------------------- |
 | claude-code-review.yml     | AI reviews every PR automatically         |
 | claude.yml                 | Responds to @claude mentions              |
-| tests.yml                  | Runs Pest with Postgres                   |
-| lint.yml                   | Pint + ESLint + Prettier                  |
+| ci.yml                     | Unified CI: Lint, Test (Postgres), Security |
 | dependabot-automerge.yml   | Auto-merges minor/patch dependency updates |
+
+**Note:** The unified `ci.yml` workflow runs three parallel jobs:
+- **Lint** (~55s): PHP Pint, Wayfinder types, TypeScript, ESLint, Prettier
+- **Test** (~1m20s): PostgreSQL 16, frontend build, Pest with coverage
+- **Security** (~20s): Composer + npm audit
 
 ### Coding Standards
 
@@ -148,6 +152,54 @@ The command is idempotent - run it on existing projects and it only installs wha
 - Scheduler (`schedule:work`)
 - Pail (log tailing)
 - Vite (frontend)
+
+## Repository Setup
+
+Claudavel installs comprehensive GitHub repository setup scaffolding:
+
+### Issue Templates
+- **Bug Report** - Structured bug reports with area classification
+- **Feature Request** - Feature requests with MVP priority tracking
+- **Config** - Links to project board for roadmap visibility
+
+### Pull Request Template
+Laravel-specific compliance checklist:
+- Code standards verification (`docs/standards/`)
+- Type generation check (`php artisan types:generate`)
+- Pint formatting (`vendor/bin/pint --dirty`)
+
+### CODEOWNERS
+Template file for automatic PR reviewer assignment.
+
+### Husky + lint-staged Pre-commit Hooks
+Automatically formats code before commits:
+- PHP files → Laravel Pint
+- JS/TS files → ESLint + Prettier
+- CSS/JSON/MD/YAML → Prettier
+
+**Setup:**
+```bash
+npm install --save-dev husky lint-staged
+npx husky init
+```
+
+The installer creates `.husky/pre-commit` and adds `lint-staged` config to `package.json`.
+
+### Branch Protection (Recommended)
+Configure branch protection rules for `main`:
+- Require status checks: Lint, Test, Security
+- Dismiss stale reviews
+- Don't enforce on admins (allows maintainer override)
+- No force pushes or deletions
+
+**Note:** Branch protection requires GitHub Pro for private repositories.
+
+### ESLint Configuration
+The ESLint config automatically ignores Wayfinder generated files:
+- `resources/js/actions/**`
+- `resources/js/routes/**`
+
+This prevents import order and unused variable warnings for generated code.
 
 ## Requirements
 
