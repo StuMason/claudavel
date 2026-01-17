@@ -343,10 +343,11 @@ test('lint workflow checks pint and eslint', function () {
 test('claude workflows have access controls', function () {
     $stubsPath = dirname(__DIR__, 2).'/stubs/.github/workflows';
 
+    // Code review skips dependabot
     $claudeReview = File::get("{$stubsPath}/claude-code-review.yml.stub");
     expect($claudeReview)->toContain("github.actor != 'dependabot[bot]'");
 
-    // claude.yml uses author_association for security
+    // Claude mentions require owner/collaborator (security: prevents unauthorized trigger)
     $claude = File::get("{$stubsPath}/claude.yml.stub");
     expect($claude)->toContain("author_association == 'OWNER'");
     expect($claude)->toContain("author_association == 'COLLABORATOR'");
