@@ -35,7 +35,13 @@ createdb my_app
 composer run dev
 ```
 
-Add `CLAUDE_CODE_OAUTH_TOKEN` to your GitHub repo secrets to enable AI features.
+Then set up Claude's GitHub integration:
+
+```bash
+claude /install-github-app
+```
+
+This adds the `CLAUDE_CODE_OAUTH_TOKEN` secret to your repository, enabling AI code review and @claude mentions.
 
 ## What Gets Installed
 
@@ -223,6 +229,19 @@ The ESLint config automatically ignores Wayfinder generated files:
 - `resources/js/routes/**`
 
 This prevents import order and unused variable warnings for generated code.
+
+## Keeping Stubs Updated
+
+The workflow files, templates, and configs installed by Claudavel are static copies. To get updates:
+
+```bash
+composer update stumason/claudavel
+php artisan claudavel:install --force
+```
+
+The `--force` flag overwrites existing files with the latest versions. Review the changes before committing.
+
+**Note:** Dependabot monitors your project's `composer.json`, `package.json`, and workflow files - but not the stub templates in the Claudavel package itself. Updating Claudavel is how you get improved stubs.
 
 ## Requirements
 

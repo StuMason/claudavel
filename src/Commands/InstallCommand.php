@@ -6,8 +6,10 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\spin;
+use function Laravel\Prompts\text;
 use function Laravel\Prompts\warning;
 
 class InstallCommand extends Command
@@ -719,13 +721,8 @@ PHP;
             $force
         );
 
-        // CODEOWNERS
-        $this->publishFile(
-            "{$stubsPath}/.github/CODEOWNERS.stub",
-            base_path('.github/CODEOWNERS'),
-            '.github/CODEOWNERS',
-            $force
-        );
+        // CODEOWNERS - interactive setup
+        $this->setupCodeowners($stubsPath, $force);
 
         // Pull request template
         $this->publishFile(
@@ -750,7 +747,47 @@ PHP;
         }
 
         $this->newLine();
-        $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration');
-        $this->components->warn('Update .github/CODEOWNERS with your GitHub username');
+        $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration.');
+        $this->components->info('Run `claude /install-github-app` to configure GitHub integration.');
+    }
+
+    private function setupCodeowners(string $stubsPath, bool $force): void
+    {
+        $codeownersPath = base_path('.github/CODEOWNERS');
+
+        if (File::exists($codeownersPath) && ! $force) {
+            $this->components->warn('.github/CODEOWNERS already exists (use --force to overwrite)');
+
+            return;
+        }
+
+        $wantsCodeowners = confirm(
+            label: 'Set up CODEOWNERS file for automatic PR review assignment?',
+            default: true
+        );
+
+        if (! $wantsCodeowners) {
+            return;
+        }
+
+        $username = text(
+            label: 'What is your GitHub username?',
+            placeholder: 'e.g. StuMason',
+            required: true,
+            validate: fn (string $value) => preg_match('/^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/', $value)
+                ? null
+                : 'Invalid GitHub username format'
+        );
+
+        $content = str_replace(
+            '@USERNAME',
+            '@'.$username,
+            File::get("{$stubsPath}/.github/CODEOWNERS.stub")
+        );
+
+        File::ensureDirectoryExists(dirname($codeownersPath));
+        File::put($codeownersPath, $content);
+
+        $this->components->info("Created .github/CODEOWNERS with @{$username}");
     }
 }
