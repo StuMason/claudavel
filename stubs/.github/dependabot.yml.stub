@@ -8,11 +8,18 @@ updates:
       time: "09:00"
       timezone: Europe/London
     open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - php
     groups:
       minor-and-patch:
+        patterns:
+          - "*"
         update-types:
           - minor
           - patch
+    commit-message:
+      prefix: "chore(deps)"
 
   - package-ecosystem: npm
     directory: /
@@ -22,11 +29,18 @@ updates:
       time: "09:00"
       timezone: Europe/London
     open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - javascript
     groups:
       minor-and-patch:
+        patterns:
+          - "*"
         update-types:
           - minor
           - patch
+    commit-message:
+      prefix: "chore(deps)"
 
   - package-ecosystem: github-actions
     directory: /
@@ -36,3 +50,8 @@ updates:
       time: "09:00"
       timezone: Europe/London
     open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "chore(deps)"

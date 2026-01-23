@@ -750,7 +750,9 @@ PHP;
         }
 
         $this->newLine();
-        $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration');
-        $this->components->warn('Update .github/CODEOWNERS with your GitHub username');
+        $this->components->warn('GitHub workflows require CLAUDE_CODE_OAUTH_TOKEN secret for Claude integration.');
+        $this->components->info('Run `claude /install-github-app` to configure GitHub integration.');
+        $this->newLine();
+        $this->components->warn('Update .github/CODEOWNERS with your GitHub username.');
     }
 }
