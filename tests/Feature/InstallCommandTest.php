@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Stumason\Claudavel\Commands\InstallCommand;
 
 beforeEach(function () {
     // Clean up any test artifacts
@@ -20,7 +22,7 @@ test('command is registered', function () {
 });
 
 test('command has correct signature', function () {
-    $command = $this->app->make(\Stumason\Claudavel\Commands\InstallCommand::class);
+    $command = $this->app->make(InstallCommand::class);
 
     expect($command->getName())->toBe('claudavel:install');
     expect($command->getDescription())->toContain('opinionated Laravel setup');
@@ -140,7 +142,7 @@ test('coding standards are concise', function () {
 });
 
 test('sanitizeName converts project names correctly', function () {
-    $command = new \Stumason\Claudavel\Commands\InstallCommand;
+    $command = new InstallCommand;
 
     expect($command->sanitizeName('My Project'))->toBe('my_project');
     expect($command->sanitizeName('my-cool-app'))->toBe('my_cool_app');
@@ -151,7 +153,7 @@ test('sanitizeName converts project names correctly', function () {
 });
 
 test('command has all expected options', function () {
-    $command = $this->app->make(\Stumason\Claudavel\Commands\InstallCommand::class);
+    $command = $this->app->make(InstallCommand::class);
     $definition = $command->getDefinition();
 
     expect($definition->hasOption('horizon'))->toBeTrue();
@@ -247,7 +249,7 @@ test('config stubs are properly formatted', function () {
 });
 
 test('service provider registers command', function () {
-    $commands = \Illuminate\Support\Facades\Artisan::all();
+    $commands = Artisan::all();
 
     expect($commands)->toHaveKey('claudavel:install');
 });
@@ -374,7 +376,7 @@ test('dependabot automerge workflow handles minor and patch', function () {
 });
 
 test('command has no-workflows option', function () {
-    $command = $this->app->make(\Stumason\Claudavel\Commands\InstallCommand::class);
+    $command = $this->app->make(InstallCommand::class);
     $definition = $command->getDefinition();
 
     expect($definition->hasOption('no-workflows'))->toBeTrue();
