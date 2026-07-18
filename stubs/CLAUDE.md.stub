@@ -47,6 +47,15 @@ git push -u origin feature/user-profiles
 # Create PR when feature is complete
 ```
 
+### Committing — use /commit
+
+Commit via the `/commit` command (defined in `.claude/commands/commit.md`), not
+ad-hoc `git commit`. It writes a Conversation Decision Record to
+`docs/context/` alongside each non-trivial commit — the reasoning, trade-offs,
+and rejected alternatives from the conversation — then backfills the commit SHA
+into the record. The diff shows what changed; the CDR preserves why. Trivial
+changes (typos, dep bumps, formatting) skip the CDR automatically.
+
 ---
 
 ## GitHub Interactions

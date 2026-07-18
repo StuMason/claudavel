@@ -112,3 +112,13 @@ public function handle(User $user, array $data): bool
 // Bad
 public function handle($user, $data)
 ```
+
+---
+
+## Conversation Decision Records
+
+Commit through `/commit`. Non-trivial commits get a CDR in `docs/context/` —
+a short markdown file recording the reasoning, decisions, and rejected
+alternatives from the conversation that produced the change, linked to the
+commit SHA. The diff shows what changed; the CDR is the only place the *why*
+survives. Search `docs/context/` before re-litigating an old decision.

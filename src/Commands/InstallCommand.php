@@ -304,6 +304,28 @@ class InstallCommand extends Command
             $force
         );
 
+        // Claude Code assets
+        $this->publishFile(
+            "{$stubsPath}/.claude/commands/commit.md.stub",
+            base_path('.claude/commands/commit.md'),
+            '.claude/commands/commit.md',
+            $force
+        );
+
+        $this->publishFile(
+            "{$stubsPath}/.claude/settings.json.stub",
+            base_path('.claude/settings.json'),
+            '.claude/settings.json',
+            $force
+        );
+
+        $this->publishFile(
+            "{$stubsPath}/docs/context/.gitkeep.stub",
+            base_path('docs/context/.gitkeep'),
+            'docs/context/',
+            $force
+        );
+
         // Config files
         $this->publishFile(
             "{$stubsPath}/prettierrc.stub",

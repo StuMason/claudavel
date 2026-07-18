@@ -58,6 +58,20 @@ This adds the `CLAUDE_CODE_OAUTH_TOKEN` secret to your repository, enabling AI c
 | laravel/wayfinder   | Type-safe routes in TypeScript                  |
 | sqids/sqids         | ID obfuscation                                  |
 
+### Claude Code Assets
+
+| File                          | What it does                                                    |
+| ----------------------------- | --------------------------------------------------------------- |
+| `.claude/commands/commit.md`  | `/commit` — commits with a Conversation Decision Record         |
+| `.claude/settings.json`       | Permission allowlist (pint, pest, artisan test, git reads)      |
+| `docs/context/`               | Where CDRs live — the searchable "why" behind every commit      |
+
+**The CDR pattern:** every non-trivial `/commit` writes a short markdown record
+of the reasoning, trade-offs, and rejected alternatives from the conversation
+that produced the change, then backfills the commit SHA into it. Six months
+later, `git log` tells you what changed and `docs/context/` tells you why.
+Trivial commits (typos, dep bumps, formatting) skip the record.
+
 ### GitHub Workflows
 
 | Workflow                   | What it does                              |
