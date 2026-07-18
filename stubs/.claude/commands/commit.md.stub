@@ -1,0 +1,59 @@
+# /commit — commit with a Conversation Decision Record
+
+Create an atomic commit that captures not just what changed, but why. The diff
+shows the "what"; the CDR preserves the reasoning from this conversation so
+that six months from now the "why" is still in the repo.
+
+## Steps
+
+1. **Gather context.** Run `git status`, `git diff` (staged and unstaged), and
+   `git log --oneline -10` to understand what changed and match the repo's
+   commit message style.
+
+2. **Decide whether this commit needs a CDR.** Most do. Skip the CDR (go
+   straight to step 4) only for trivial changes with no reasoning worth
+   preserving: typo fixes, dependency bumps, formatting-only changes,
+   generated files. If the conversation involved a decision, trade-off, or
+   rejected alternative, write the CDR.
+
+3. **Write the CDR** at `docs/context/YYYY-MM-DD-short-slug.md`, reflecting on
+   the conversation that led to these changes — not just the diff:
+
+   ```markdown
+   # Short Title Derived From Changes
+
+   **Date:** YYYY-MM-DD
+   **Commit:** (backfilled in step 6)
+
+   ## What changed
+   Brief description of the code changes.
+
+   ## Why
+   The reasoning from the conversation. What problem were we solving?
+
+   ## Decisions made
+   - **Decision**: Chose X because Y
+
+   ## Rejected alternatives
+   Things considered but not done, and why.
+
+   ## Context
+   Relevant notes — links discussed, constraints mentioned, things to
+   revisit later.
+   ```
+
+4. **Stage specific files** — the code changes and the CDR. Never `git add -A`
+   or `git add .`; name the files.
+
+5. **Commit** with a message matching the repo's existing style. Never add
+   AI-attribution footers (no `Co-Authored-By`, no robot emoji, no
+   "Generated with" lines).
+
+6. **Backfill the SHA.** Read the new commit's short SHA, write it into the
+   CDR's `**Commit:**` line, then
+   `git add docs/context/<file> && git commit --amend --no-edit --no-verify`.
+   The `--no-verify` is deliberate: hooks already ran on the real commit;
+   re-running them on the amend doubles formatter/test time for no benefit.
+
+7. **Confirm** with a one-line summary: the SHA, the message, and the CDR path
+   (or "no CDR — trivial change").

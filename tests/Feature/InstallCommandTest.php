@@ -58,11 +58,43 @@ test('all required stubs exist', function () {
         'config/claudavel.php.stub',
         'app/Actions/.gitkeep.stub',
         'app/DataTransferObjects/.gitkeep.stub',
+        '.claude/commands/commit.md.stub',
+        '.claude/settings.json.stub',
+        'docs/context/.gitkeep.stub',
     ];
 
     foreach ($requiredStubs as $stub) {
         expect(File::exists("{$stubsPath}/{$stub}"))->toBeTrue("Missing stub: {$stub}");
     }
+});
+
+test('commit command stub defines the CDR workflow', function () {
+    $content = File::get(dirname(__DIR__, 2).'/stubs/.claude/commands/commit.md.stub');
+
+    expect($content)->toContain('docs/context/')
+        ->and($content)->toContain('Rejected alternatives')
+        ->and($content)->toContain('--amend --no-edit --no-verify')
+        // never git add -A, and never AI-attribution footers
+        ->and($content)->toContain('Never `git add -A`')
+        ->and($content)->toContain('Co-Authored-By');
+});
+
+test('claude settings stub is valid json with a permissions allowlist', function () {
+    $content = File::get(dirname(__DIR__, 2).'/stubs/.claude/settings.json.stub');
+    $decoded = json_decode($content, true);
+
+    expect($decoded)->not->toBeNull()
+        ->and($decoded['permissions']['allow'])->toBeArray()
+        ->and($decoded['permissions']['allow'])->toContain('Bash(vendor/bin/pint)')
+        ->and($decoded['permissions'])->not->toHaveKey('deny');
+});
+
+test('install command publishes claude assets', function () {
+    $source = File::get(dirname(__DIR__, 2).'/src/Commands/InstallCommand.php');
+
+    expect($source)->toContain('.claude/commands/commit.md')
+        ->and($source)->toContain('.claude/settings.json')
+        ->and($source)->toContain('docs/context/.gitkeep');
 });
 
 test('health check controller stub is valid php', function () {

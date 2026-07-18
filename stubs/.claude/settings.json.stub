@@ -1,0 +1,23 @@
+{
+    "permissions": {
+        "allow": [
+            "Bash(vendor/bin/pint)",
+            "Bash(vendor/bin/pint *)",
+            "Bash(vendor/bin/pest)",
+            "Bash(vendor/bin/pest *)",
+            "Bash(php artisan test)",
+            "Bash(php artisan test *)",
+            "Bash(php artisan route:list*)",
+            "Bash(php artisan migrate:status)",
+            "Bash(php artisan config:clear)",
+            "Bash(composer test)",
+            "Bash(composer lint)",
+            "Bash(npm run build)",
+            "Bash(npm run lint)",
+            "Bash(npm run format)",
+            "Bash(git status*)",
+            "Bash(git diff*)",
+            "Bash(git log*)"
+        ]
+    }
+}
